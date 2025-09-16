@@ -10,7 +10,7 @@
 //14 de septiembre del 2025
 //318143093
 
-// Shaders
+//Shaders
 #include "Shader.h"
 
 void Inputs(GLFWwindow* window);
