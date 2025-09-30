@@ -1,15 +1,9 @@
 #version 330 core
-out vec4 outColor;
-  
-in vec3 Color;
-in vec2 TexCoord;
+out vec4 color;
 
-uniform sampler2D ourTexture;
+uniform vec3 lampColor;
 
 void main()
 {
-    outColor = vec4(Color,1.0)*texture(ourTexture, TexCoord);
-    if(outColor.a<0.1)
-    discard;
+    color = vec4(lampColor, 1.0f);
 }
-    
