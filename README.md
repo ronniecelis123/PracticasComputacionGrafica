@@ -1,6 +1,6 @@
-# Practica 6 de Computación Gráfica
+# Practica 7 de Computación Gráfica
 ## Ronie Celis Hernández
 ## 318143093
-## Fecha de entrega: 21/09/2025
+## Fecha de entrega: 28/09/2025
 
 
