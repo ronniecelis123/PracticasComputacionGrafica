@@ -1,5 +1,5 @@
 // Previo 8
-// Celis Hernández Ronie
+// Celis Hernandez Ronie
 // 30 de septiembre del 2025
 // 318143093
 
@@ -51,14 +51,14 @@ glm::vec3 centerBlue(0.0f, 0.0f, -0.5f);   // Azul:   plano YX (este?oeste en X)
 
 // Semiejes de cada elipse (verticales)
 // BLANCA (plano YZ): domina Y (altura) y recorre Z (S?N)
-float ayWhite = 7.5f;  // radio en Y (qué tan alto/bajo “sol”)
+float ayWhite = 7.5f;   // radio en Y (que tan alto/bajo “sol”)
 float bzWhite = 10.5f;  // radio en Z (sur-norte)
 
 // AZUL (plano YX): domina Y (altura) y recorre X (E?O)
-float ayBlue = 7.5f;  // radio en Y
+float ayBlue = 7.5f;   // radio en Y
 float axBlue = 10.5f;  // radio en X (este-oeste)
 
-// Ángulos (avanzan/retroceden con teclas)
+// Angulos (avanzan/retroceden con teclas)
 float tWhite = 0.0f;   // O / L
 float tBlue = 0.0f;   // I / K
 float stepAngle = 0.02f;
@@ -97,9 +97,6 @@ int main()
     glfwSetKeyCallback(window, KeyCallback);
     glfwSetCursorPosCallback(window, MouseCallback);
 
-    // GLFW Options
-    //glfwSetInputMode( window, GLFW_CURSOR, GLFW_CURSOR_DISABLED );
-
     // Modern function pointers
     glewExperimental = GL_TRUE;
     if (GLEW_OK != glewInit())
@@ -128,19 +125,17 @@ int main()
     glEnable(GL_DEPTH_TEST);
 
     // Shaders
-    Shader shader("Shader/modelLoading.vs", "Shader/modelLoading.frag");
+    Shader shader("Shader/modelLoading.vs", "Shader/modelLoading.frag");   // (opcional, no lo usamos para dibujar)
     Shader lampshader("Shader/lamp.vs", "Shader/lamp.frag");
     Shader lightingShader("Shader/lighting.vs", "Shader/lighting.frag");
 
     // Models
-  // Load models
     Model dog((char*)"Models/RedDog.obj");
     Model avion((char*)"Models/granja.obj");
     Model grass((char*)"Models/grass.obj");
     Model arbol((char*)"Models/arbol.obj");
     Model molino((char*)"Models/molino.obj");
     Model valla((char*)"Models/valla.obj");
-
 
     glm::mat4 projection = glm::perspective(camera.GetZoom(), (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT, 0.1f, 100.0f);
 
@@ -189,7 +184,7 @@ int main()
         -0.5f, 0.5f,-0.5f,    0.0f,  1.0f, 0.0f
     };
 
-    // VAO/VBO
+    // VAO/VBO para lamparas
     GLuint VBO, VAO;
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
@@ -203,7 +198,7 @@ int main()
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
 
-    // Textura
+    // Textura de ejemplo
     GLuint texture;
     glGenTextures(1, &texture);
     glBindTexture(GL_TEXTURE_2D, texture);
@@ -212,7 +207,6 @@ int main()
     unsigned char* image;
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    // MAG no admite mipmaps
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
@@ -239,31 +233,30 @@ int main()
         glfwPollEvents();
         DoMovement();
 
-        // Normaliza ángulos a [0, 2?)
+       
         const float TWO_PI = 6.28318530718f;
         if (tWhite >= TWO_PI) tWhite = fmod(tWhite, TWO_PI);
-        if (tWhite < 0.0f)     tWhite += TWO_PI;
+        if (tWhite < 0.0f)    tWhite += TWO_PI;
         if (tBlue >= TWO_PI) tBlue = fmod(tBlue, TWO_PI);
-        if (tBlue < 0.0f)     tBlue += TWO_PI;
+        if (tBlue < 0.0f)    tBlue += TWO_PI;
 
-        // === POSICIONES DE LAS ELIPSES EN PLANOS VERTICALES ===
-        // BLANCA (plano YZ): y = ay*sin(t), z = bz*cos(t), x fijo
+        
         glm::vec3 whitePos;
         whitePos.x = centerWhite.x;                             // fijo en X
-        whitePos.y = centerWhite.y + ayWhite * sin(tWhite);     // arriba/abajo (día/noche)
+        whitePos.y = centerWhite.y + ayWhite * sin(tWhite);     // arriba/abajo (dia/noche)
         whitePos.z = centerWhite.z + bzWhite * cos(tWhite);     // sur?norte
 
-        // AZUL (plano YX): y = ay*sin(t), x = ax*cos(t), z fijo
+        // Azul (plano YX): y = ay*sin(t), x = ax*cos(t), z fijo
         glm::vec3 bluePos;
         bluePos.z = centerBlue.z;                               // fijo en Z
-        bluePos.y = centerBlue.y + ayBlue * sin(tBlue);        // arriba/abajo
-        bluePos.x = centerBlue.x + axBlue * cos(tBlue);        // este?oeste
+        bluePos.y = centerBlue.y + ayBlue * sin(tBlue);         // arriba/abajo
+        bluePos.x = centerBlue.x + axBlue * cos(tBlue);         // este?oeste
 
         // Clear
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        // Luz y materiales
+        // === LUCES + MATRICES (lightingShader) ===
         lightingShader.Use();
         GLint lightPosLoc = glGetUniformLocation(lightingShader.Program, "light.position");
         GLint viewPosLoc = glGetUniformLocation(lightingShader.Program, "viewPos");
@@ -291,28 +284,25 @@ int main()
         glUniform3f(glGetUniformLocation(lightingShader.Program, "material.specular"), 1.0f, 1.0f, 1.0f);
         glUniform1f(glGetUniformLocation(lightingShader.Program, "material.shininess"), 16.0f);
 
-        // Draw the loaded model
-        glm::mat4 model(1);
-        glUniformMatrix4fv(glGetUniformLocation(shader.Program, "model"), 1, GL_FALSE, glm::value_ptr(model));
-
+        // === DIBUJAR MODELOS CON lightingShader ===
+        glm::mat4 model(1.0f);
         model = glm::scale(model, glm::vec3(2.0f, 2.0f, 2.0f));
-        glUniformMatrix4fv(glGetUniformLocation(shader.Program, "model"), 1, GL_FALSE, glm::value_ptr(model));
-        dog.Draw(shader);
-        avion.Draw(shader);
-        grass.Draw(shader);
-        arbol.Draw(shader);
-        molino.Draw(shader);
-        valla.Draw(shader);
-        glm::mat4 model3(1.0f);
-        glBindVertexArray(0);
+        glUniformMatrix4fv(glGetUniformLocation(lightingShader.Program, "model"), 1, GL_FALSE, glm::value_ptr(model));
 
-        // Lámparas (cubos que muestran dónde están las luces)
+        dog.Draw(lightingShader);
+        avion.Draw(lightingShader);
+        grass.Draw(lightingShader);
+        arbol.Draw(lightingShader);
+        molino.Draw(lightingShader);
+        valla.Draw(lightingShader);
+
+        // === DIBUJAR LAMPARAS (cubo) ===
         lampshader.Use();
         glUniformMatrix4fv(glGetUniformLocation(lampshader.Program, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
         glUniformMatrix4fv(glGetUniformLocation(lampshader.Program, "view"), 1, GL_FALSE, glm::value_ptr(view));
         glBindVertexArray(VAO);
 
-        // Lámpara blanca
+        // Lampara blanca
         glm::mat4 lampModel = glm::mat4(1.0f);
         lampModel = glm::translate(lampModel, whitePos);
         lampModel = glm::scale(lampModel, glm::vec3(0.3f));
@@ -320,7 +310,7 @@ int main()
         glUniform3f(glGetUniformLocation(lampshader.Program, "lampColor"), 1.0f, 1.0f, 1.0f);
         glDrawArrays(GL_TRIANGLES, 0, 36);
 
-        // Lámpara azul
+        // Lampara azul
         glm::mat4 lampModel2 = glm::mat4(1.0f);
         lampModel2 = glm::translate(lampModel2, bluePos);
         lampModel2 = glm::scale(lampModel2, glm::vec3(0.3f));
@@ -357,7 +347,7 @@ void DoMovement()
     if (keys[GLFW_KEY_D] || keys[GLFW_KEY_RIGHT])
         camera.ProcessKeyboard(RIGHT, deltaTime);
 
-    // Control manual de las elipses (MISMAS TECLAS):
+  
     // Luz blanca (plano YZ): O avanza, L retrocede
     if (keys[GLFW_KEY_O]) tWhite += stepAngle;
     if (keys[GLFW_KEY_L]) tWhite -= stepAngle;
@@ -366,7 +356,7 @@ void DoMovement()
     if (keys[GLFW_KEY_I]) tBlue += stepAngle;
     if (keys[GLFW_KEY_K]) tBlue -= stepAngle;
 
-    // (Opcional) animación del molino
+    // (Opcional) animacion del molino
     if (activanim)
     {
         if (rot > -90.0f)
@@ -390,11 +380,7 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mode
             keys[key] = false;
     }
 
-    // (Opcional) ajustar radios al vuelo:
-    // if (keys[GLFW_KEY_1]) ayWhite += 0.01f;
-    // if (keys[GLFW_KEY_2]) bzWhite += 0.01f;
-    // if (keys[GLFW_KEY_3]) ayBlue  += 0.01f;
-    // if (keys[GLFW_KEY_4]) axBlue  += 0.01f;
+
 }
 
 void MouseCallback(GLFWwindow* window, double xPos, double yPos)
@@ -407,7 +393,7 @@ void MouseCallback(GLFWwindow* window, double xPos, double yPos)
     }
 
     GLfloat xOffset = (GLfloat)xPos - lastX;
-    GLfloat yOffset = lastY - (GLfloat)yPos; // Reversed since y-coordinates go from bottom to left
+    GLfloat yOffset = lastY - (GLfloat)yPos; 
 
     lastX = (GLfloat)xPos;
     lastY = (GLfloat)yPos;
