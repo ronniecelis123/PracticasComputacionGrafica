@@ -1,13 +1,13 @@
-// Previo 8
-// Celis Hernandez Ronie
-// 30 de septiembre del 2025
+// Practica 8
+// Celis Hernández Ronie
+// 12 de octubre del 2025
 // 318143093
 
 // Std. Includes
 #include <string>
 #include <iostream>
 #include <cstdlib>
-#include <cmath> // sin, cos, fmod
+#include <cmath> // sin, cos
 
 // GLEW
 #include <GL/glew.h>
@@ -44,29 +44,25 @@ bool keys[1024];
 GLfloat lastX = 400, lastY = 300;
 bool firstMouse = true;
 
-// === LUCES EN PLANOS VERTICALES (ELIPSES COMPLETAS, CONTROL MANUAL) ===
-// Centros base (ajústalos a tu escena). y ? 0 es “horizonte”.
-glm::vec3 centerWhite(0.5f, 0.0f, 0.0f);   // Blanca: plano YZ (sur?norte en Z)
-glm::vec3 centerBlue(0.0f, 0.0f, -0.5f);   // Azul:   plano YX (este?oeste en X)
 
-// Semiejes de cada elipse (verticales)
-// BLANCA (plano YZ): domina Y (altura) y recorre Z (S?N)
-float ayWhite = 7.5f;   // radio en Y (que tan alto/bajo “sol”)
-float bzWhite = 10.5f;  // radio en Z (sur-norte)
+glm::vec3 centerWhite(0.5f, 0.0f, 0.0f);   
+glm::vec3 centerBlue(0.0f, 0.0f, -0.5f);   
 
-// AZUL (plano YX): domina Y (altura) y recorre X (E?O)
-float ayBlue = 7.5f;   // radio en Y
-float axBlue = 10.5f;  // radio en X (este-oeste)
+float ayWhite = 7.5f;   
+float bzWhite = 10.5f;  
+float ayBlue = 7.5f;   
+float axBlue = 10.5f;  
 
-// Angulos (avanzan/retroceden con teclas)
 float tWhite = 0.0f;   // O / L
 float tBlue = 0.0f;   // I / K
 float stepAngle = 0.02f;
 
+const float T_MIN = 0.0f;
+const float T_MAX = 3.1415926535f; 
+
 // Otros estados
 GLfloat deltaTime = 0.0f;
 GLfloat lastFrame = 0.0f;
-float rot = 0.0f;
 bool activanim = false;
 
 int main()
@@ -125,11 +121,11 @@ int main()
     glEnable(GL_DEPTH_TEST);
 
     // Shaders
-    Shader shader("Shader/modelLoading.vs", "Shader/modelLoading.frag");   // (opcional, no lo usamos para dibujar)
+    Shader shader("Shader/modelLoading.vs", "Shader/modelLoading.frag");   // (opcional; no lo uso para dibujar)
     Shader lampshader("Shader/lamp.vs", "Shader/lamp.frag");
     Shader lightingShader("Shader/lighting.vs", "Shader/lighting.frag");
 
-    // Models
+    // Models de escena
     Model dog((char*)"Models/RedDog.obj");
     Model avion((char*)"Models/granja.obj");
     Model grass((char*)"Models/grass.obj");
@@ -137,66 +133,10 @@ int main()
     Model molino((char*)"Models/molino.obj");
     Model valla((char*)"Models/valla.obj");
 
+    // Modelo de Blender para lámparas (ESFERA)
+    Model lampSphere((char*)"Models/esfera.obj");  
+
     glm::mat4 projection = glm::perspective(camera.GetZoom(), (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT, 0.1f, 100.0f);
-
-    float vertices[] = {
-        // positions          // normals
-        -0.5f,-0.5f,-0.5f,    0.0f,  0.0f,-1.0f,
-         0.5f,-0.5f,-0.5f,    0.0f,  0.0f,-1.0f,
-         0.5f, 0.5f,-0.5f,    0.0f,  0.0f,-1.0f,
-         0.5f, 0.5f,-0.5f,    0.0f,  0.0f,-1.0f,
-        -0.5f, 0.5f,-0.5f,    0.0f,  0.0f,-1.0f,
-        -0.5f,-0.5f,-0.5f,    0.0f,  0.0f,-1.0f,
-
-        -0.5f,-0.5f, 0.5f,    0.0f,  0.0f, 1.0f,
-         0.5f,-0.5f, 0.5f,    0.0f,  0.0f, 1.0f,
-         0.5f, 0.5f, 0.5f,    0.0f,  0.0f, 1.0f,
-         0.5f, 0.5f, 0.5f,    0.0f,  0.0f, 1.0f,
-        -0.5f, 0.5f, 0.5f,    0.0f,  0.0f, 1.0f,
-        -0.5f,-0.5f, 0.5f,    0.0f,  0.0f, 1.0f,
-
-        -0.5f, 0.5f, 0.5f,   -1.0f,  0.0f, 0.0f,
-        -0.5f, 0.5f,-0.5f,   -1.0f,  0.0f, 0.0f,
-        -0.5f,-0.5f,-0.5f,   -1.0f,  0.0f, 0.0f,
-        -0.5f,-0.5f,-0.5f,   -1.0f,  0.0f, 0.0f,
-        -0.5f,-0.5f, 0.5f,   -1.0f,  0.0f, 0.0f,
-        -0.5f, 0.5f, 0.5f,   -1.0f,  0.0f, 0.0f,
-
-         0.5f, 0.5f, 0.5f,    1.0f,  0.0f, 0.0f,
-         0.5f, 0.5f,-0.5f,    1.0f,  0.0f, 0.0f,
-         0.5f,-0.5f,-0.5f,    1.0f,  0.0f, 0.0f,
-         0.5f,-0.5f,-0.5f,    1.0f,  0.0f, 0.0f,
-         0.5f,-0.5f, 0.5f,    1.0f,  0.0f, 0.0f,
-         0.5f, 0.5f, 0.5f,    1.0f,  0.0f, 0.0f,
-
-        -0.5f,-0.5f,-0.5f,    0.0f, -1.0f, 0.0f,
-         0.5f,-0.5f,-0.5f,    0.0f, -1.0f, 0.0f,
-         0.5f,-0.5f, 0.5f,    0.0f, -1.0f, 0.0f,
-         0.5f,-0.5f, 0.5f,    0.0f, -1.0f, 0.0f,
-        -0.5f,-0.5f, 0.5f,    0.0f, -1.0f, 0.0f,
-        -0.5f,-0.5f,-0.5f,    0.0f, -1.0f, 0.0f,
-
-        -0.5f, 0.5f,-0.5f,    0.0f,  1.0f, 0.0f,
-         0.5f, 0.5f,-0.5f,    0.0f,  1.0f, 0.0f,
-         0.5f, 0.5f, 0.5f,    0.0f,  1.0f, 0.0f,
-         0.5f, 0.5f, 0.5f,    0.0f,  1.0f, 0.0f,
-        -0.5f, 0.5f, 0.5f,    0.0f,  1.0f, 0.0f,
-        -0.5f, 0.5f,-0.5f,    0.0f,  1.0f, 0.0f
-    };
-
-    // VAO/VBO para lamparas
-    GLuint VBO, VAO;
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
-    glBindVertexArray(VAO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-    // Position
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)0);
-    glEnableVertexAttribArray(0);
-    // Normal
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
-    glEnableVertexAttribArray(1);
 
     // Textura de ejemplo
     GLuint texture;
@@ -233,23 +173,25 @@ int main()
         glfwPollEvents();
         DoMovement();
 
-       
-        const float TWO_PI = 6.28318530718f;
-        if (tWhite >= TWO_PI) tWhite = fmod(tWhite, TWO_PI);
-        if (tWhite < 0.0f)    tWhite += TWO_PI;
-        if (tBlue >= TWO_PI) tBlue = fmod(tBlue, TWO_PI);
-        if (tBlue < 0.0f)    tBlue += TWO_PI;
+        // ? SIN WRAP a 2?: ahora CLAMP a [0, ?] (solo la mitad superior)
+        auto clamp01pi = [](float& t) {
+            if (t < T_MIN) t = T_MIN;
+            if (t > T_MAX) t = T_MAX;
+            };
+        clamp01pi(tWhite);
+        clamp01pi(tBlue);
 
-        
+        // === POSICIONES DE LAS ELIPSES EN PLANOS VERTICALES ===
+        // Blanca (plano YZ): y = ay*sin(t), z = bz*cos(t), x fijo
         glm::vec3 whitePos;
-        whitePos.x = centerWhite.x;                             // fijo en X
-        whitePos.y = centerWhite.y + ayWhite * sin(tWhite);     // arriba/abajo (dia/noche)
-        whitePos.z = centerWhite.z + bzWhite * cos(tWhite);     // sur?norte
+        whitePos.x = centerWhite.x;                            
+        whitePos.y = centerWhite.y + ayWhite * sin(tWhite);     
+        whitePos.z = centerWhite.z + bzWhite * cos(tWhite);    
 
-        // Azul (plano YX): y = ay*sin(t), x = ax*cos(t), z fijo
+      
         glm::vec3 bluePos;
         bluePos.z = centerBlue.z;                               // fijo en Z
-        bluePos.y = centerBlue.y + ayBlue * sin(tBlue);         // arriba/abajo
+        bluePos.y = centerBlue.y + ayBlue * sin(tBlue);         // >= 0 por clamp
         bluePos.x = centerBlue.x + axBlue * cos(tBlue);         // este?oeste
 
         // Clear
@@ -284,7 +226,7 @@ int main()
         glUniform3f(glGetUniformLocation(lightingShader.Program, "material.specular"), 1.0f, 1.0f, 1.0f);
         glUniform1f(glGetUniformLocation(lightingShader.Program, "material.shininess"), 16.0f);
 
-        // === DIBUJAR MODELOS CON lightingShader ===
+   
         glm::mat4 model(1.0f);
         model = glm::scale(model, glm::vec3(2.0f, 2.0f, 2.0f));
         glUniformMatrix4fv(glGetUniformLocation(lightingShader.Program, "model"), 1, GL_FALSE, glm::value_ptr(model));
@@ -296,42 +238,36 @@ int main()
         molino.Draw(lightingShader);
         valla.Draw(lightingShader);
 
-        // === DIBUJAR LAMPARAS (cubo) ===
+        // === DIBUJAR LÁMPARAS COMO ESFERAS ===
         lampshader.Use();
         glUniformMatrix4fv(glGetUniformLocation(lampshader.Program, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
         glUniformMatrix4fv(glGetUniformLocation(lampshader.Program, "view"), 1, GL_FALSE, glm::value_ptr(view));
-        glBindVertexArray(VAO);
 
-        // Lampara blanca
+        // Lámpara blanca (esfera)
         glm::mat4 lampModel = glm::mat4(1.0f);
         lampModel = glm::translate(lampModel, whitePos);
         lampModel = glm::scale(lampModel, glm::vec3(0.3f));
         glUniformMatrix4fv(glGetUniformLocation(lampshader.Program, "model"), 1, GL_FALSE, glm::value_ptr(lampModel));
         glUniform3f(glGetUniformLocation(lampshader.Program, "lampColor"), 1.0f, 1.0f, 1.0f);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
+        lampSphere.Draw(lampshader);
 
-        // Lampara azul
+        // Lámpara azul (esfera)
         glm::mat4 lampModel2 = glm::mat4(1.0f);
         lampModel2 = glm::translate(lampModel2, bluePos);
         lampModel2 = glm::scale(lampModel2, glm::vec3(0.3f));
         glUniformMatrix4fv(glGetUniformLocation(lampshader.Program, "model"), 1, GL_FALSE, glm::value_ptr(lampModel2));
         glUniform3f(glGetUniformLocation(lampshader.Program, "lampColor"), 0.0f, 0.0f, 1.0f);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
-
-        glBindVertexArray(0);
+        lampSphere.Draw(lampshader);
 
         // Swap
         glfwSwapBuffers(window);
     }
 
-    glDeleteVertexArrays(1, &VAO);
-    glDeleteBuffers(1, &VBO);
-
     glfwTerminate();
     return 0;
 }
 
-// Moves/alters the camera positions based on user input
+
 void DoMovement()
 {
     // Camera controls
@@ -347,21 +283,14 @@ void DoMovement()
     if (keys[GLFW_KEY_D] || keys[GLFW_KEY_RIGHT])
         camera.ProcessKeyboard(RIGHT, deltaTime);
 
-  
-    // Luz blanca (plano YZ): O avanza, L retrocede
-    if (keys[GLFW_KEY_O]) tWhite += stepAngle;
-    if (keys[GLFW_KEY_L]) tWhite -= stepAngle;
 
-    // Luz azul (plano YX): I avanza, K retrocede
-    if (keys[GLFW_KEY_I]) tBlue += stepAngle;
-    if (keys[GLFW_KEY_K]) tBlue -= stepAngle;
+    if (keys[GLFW_KEY_O]) { tWhite += stepAngle; if (tWhite > T_MAX) tWhite = T_MAX; }
+    if (keys[GLFW_KEY_L]) { tWhite -= stepAngle; if (tWhite < T_MIN) tWhite = T_MIN; }
 
-    // (Opcional) animacion del molino
-    if (activanim)
-    {
-        if (rot > -90.0f)
-            rot -= 0.1f;
-    }
+    if (keys[GLFW_KEY_I]) { tBlue += stepAngle; if (tBlue > T_MAX) tBlue = T_MAX; }
+    if (keys[GLFW_KEY_K]) { tBlue -= stepAngle; if (tBlue < T_MIN) tBlue = T_MIN; }
+
+   
 }
 
 // Is called whenever a key is pressed/released via GLFW
@@ -379,8 +308,6 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mode
         else if (action == GLFW_RELEASE)
             keys[key] = false;
     }
-
-
 }
 
 void MouseCallback(GLFWwindow* window, double xPos, double yPos)
@@ -393,7 +320,7 @@ void MouseCallback(GLFWwindow* window, double xPos, double yPos)
     }
 
     GLfloat xOffset = (GLfloat)xPos - lastX;
-    GLfloat yOffset = lastY - (GLfloat)yPos; 
+    GLfloat yOffset = lastY - (GLfloat)yPos; // Reversed since y-coordinates go from bottom to left
 
     lastX = (GLfloat)xPos;
     lastY = (GLfloat)yPos;
