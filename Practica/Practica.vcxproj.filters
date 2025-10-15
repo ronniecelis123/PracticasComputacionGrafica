@@ -46,7 +46,7 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Practica8.cpp">
+    <ClCompile Include="fuentesDeLuz.cpp">
       <Filter>Archivos de origen\Shader</Filter>
     </ClCompile>
   </ItemGroup>
