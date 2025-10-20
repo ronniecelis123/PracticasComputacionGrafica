@@ -1,491 +1,384 @@
-// Previo 9
-// Celis Hernández Ronie
-// 14 de octubre del 2025
-// 318143093
+
+//Practica 9
+//Celis Hernández Ronie
+//318143093
+//19 de Octubre del 2023
+
 
 #include <iostream>
 #include <cmath>
+#include <cstdio>
 
-// GLEW
+// GLEW / GLFW
 #include <GL/glew.h>
-
-// GLFW
 #include <GLFW/glfw3.h>
 
-// Other Libs
+// stb / SOIL2
 #include "stb_image.h"
+#include "SOIL2/SOIL2.h"
 
-// GLM Mathematics
+// GLM
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-//Load Models
-#include "SOIL2/SOIL2.h"
-
-
-// Other includes
+// Proyecto
 #include "Shader.h"
 #include "Camera.h"
 #include "Model.h"
 
-// Function prototypes
-void KeyCallback(GLFWwindow *window, int key, int scancode, int action, int mode);
-void MouseCallback(GLFWwindow *window, double xPos, double yPos);
+// --- Prototipos ---
+void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mode);
+void MouseCallback(GLFWwindow* window, double xPos, double yPos);
 void DoMovement();
 
-// Window dimensions
+// --- Ventana ---
 const GLuint WIDTH = 800, HEIGHT = 600;
 int SCREEN_WIDTH, SCREEN_HEIGHT;
 
-// Camera
+// --- Cámara ---
 Camera  camera(glm::vec3(0.0f, 0.0f, 3.0f));
-GLfloat lastX = WIDTH / 2.0;
-GLfloat lastY = HEIGHT / 2.0;
-bool keys[1024];
+GLfloat lastX = WIDTH * 0.5f, lastY = HEIGHT * 0.5f;
+bool keys[1024]{};
 bool firstMouse = true;
-// Light attributes
-glm::vec3 lightPos(0.0f, 0.0f, 0.0f);
-bool active;
 
-// Positions of the point lights
-glm::vec3 pointLightPositions[] = {
-	glm::vec3(0.0f,0.0f, 0.0f),
-	glm::vec3(0.0f,0.0f, 0.0f),
-	glm::vec3(0.0f,0.0f,  0.0f),
-	glm::vec3(0.0f,0.0f, 0.0f)
-};
-
-float vertices[] = {
-	 -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
-		0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
-		0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
-		0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
-	   -0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
-	   -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
-
-	   -0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
-		0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
-		0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
-		0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
-	   -0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
-	   -0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
-
-	   -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
-	   -0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
-	   -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
-	   -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
-	   -0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
-	   -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
-
-		0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
-		0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
-		0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
-		0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
-		0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
-		0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
-
-	   -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
-		0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
-		0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
-		0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
-	   -0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
-	   -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
-
-	   -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
-		0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
-		0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
-		0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
-	   -0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
-	   -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f
-};
-
-
-
-glm::vec3 Light1 = glm::vec3(0);
-
-
-// Deltatime
+// --- Tiempo ---
 GLfloat deltaTime = 0.0f;	// Time between current frame and last frame
 GLfloat lastFrame = 0.0f;  	// Time of last frame
 
-int main()
-{
-	// Init GLFW
-	glfwInit();
-	// Set all the required options for GLFW
-	/*glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-	glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);*/
+// --- Brillo global (si quieres escalar todas las luces) ---
+float g_GlobalLightBoost = 1.0f;
 
-	// Create a GLFWwindow object that we can use for GLFW's functions
-	GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "Previo 9. Ronie Celis", nullptr, nullptr);
-
-	if (nullptr == window)
-	{
-		std::cout << "Failed to create GLFW window" << std::endl;
-		glfwTerminate();
-
-		return EXIT_FAILURE;
-	}
-
-	glfwMakeContextCurrent(window);
-
-	glfwGetFramebufferSize(window, &SCREEN_WIDTH, &SCREEN_HEIGHT);
-
-	// Set the required callback functions
-	glfwSetKeyCallback(window, KeyCallback);
-	glfwSetCursorPosCallback(window, MouseCallback);
-
-	// GLFW Options
-	//glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-
-	// Set this to true so GLEW knows to use a modern approach to retrieving function pointers and extensions
-	glewExperimental = GL_TRUE;
-	// Initialize GLEW to setup the OpenGL Function pointers
-	if (GLEW_OK != glewInit())
-	{
-		std::cout << "Failed to initialize GLEW" << std::endl;
-		return EXIT_FAILURE;
-	}
-
-	// === INFO DEL CONTEXTO OPENGL ===
-	{
-		auto safe_cstr = [](const GLubyte* s) -> const char* {
-			return s ? reinterpret_cast<const char*>(s) : "(null)";
-			};
-		auto print_gl_str = [&](GLenum pname, const char* label) {
-			const GLubyte* s = glGetString(pname);
-			std::cout << label << safe_cstr(s) << '\n';
-			};
-		print_gl_str(GL_VERSION, "> Version: ");
-		print_gl_str(GL_VENDOR, "> Vendor: ");
-		print_gl_str(GL_RENDERER, "> Renderer: ");
-		print_gl_str(GL_SHADING_LANGUAGE_VERSION, "> SL Version: ");
-	}
-	// Define the viewport dimensions
-	glViewport(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
-
-
-
-	Shader lightingShader("Shader/lighting.vs", "Shader/lighting.frag");
-	Shader lampShader("Shader/lamp.vs", "Shader/lamp.frag");
-	
-	Model Dog((char*)"Models/cono.obj");
-	Model Piso((char*)"Models/piso.obj");
-
-
-
-	// First, set the container's VAO (and VBO)
-	GLuint VBO, VAO;
-	glGenVertexArrays(1, &VAO);
-	glGenBuffers(1, &VBO);
-	glBindVertexArray(VAO);
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-	// Position attribute
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)0);
-	glEnableVertexAttribArray(0);
-	// normal attribute
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
-	glEnableVertexAttribArray(1);
-
-	// Set texture units
-	lightingShader.Use();
-	glUniform1i(glGetUniformLocation(lightingShader.Program, "Material.difuse"), 0);
-	glUniform1i(glGetUniformLocation(lightingShader.Program, "Material.specular"), 1);
-
-	glm::mat4 projection = glm::perspective(camera.GetZoom(), (GLfloat)SCREEN_WIDTH / (GLfloat)SCREEN_HEIGHT, 0.1f, 100.0f);
-
-	// Game loop
-	while (!glfwWindowShouldClose(window))
-	{
-
-		// Calculate deltatime of current frame
-		GLfloat currentFrame = glfwGetTime();
-		deltaTime = currentFrame - lastFrame;
-		lastFrame = currentFrame;
-
-		// Check if any events have been activiated (key pressed, mouse moved etc.) and call corresponding response functions
-		glfwPollEvents();
-		DoMovement();
-
-		// Clear the colorbuffer
-		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	   
-		// OpenGL options
-		glEnable(GL_DEPTH_TEST);
-
-		
-		
-		//Load Model
-	
-
-		// Use cooresponding shader when setting uniforms/drawing objects
-		lightingShader.Use();
-
-                  glUniform1i(glGetUniformLocation(lightingShader.Program, "diffuse"), 0);
-		//glUniform1i(glGetUniformLocation(lightingShader.Program, "specular"),1);
-
-		GLint viewPosLoc = glGetUniformLocation(lightingShader.Program, "viewPos");
-		glUniform3f(viewPosLoc, camera.GetPosition().x, camera.GetPosition().y, camera.GetPosition().z);
-
-
-		// Directional light
-		glUniform3f(glGetUniformLocation(lightingShader.Program, "dirLight.direction"), -0.2f, -1.0f, -0.3f);
-		glUniform3f(glGetUniformLocation(lightingShader.Program, "dirLight.ambient"),0.05f,0.05f,0.05f);
-		glUniform3f(glGetUniformLocation(lightingShader.Program, "dirLight.diffuse"), 0.05f, 0.05f, 0.05f);
-		glUniform3f(glGetUniformLocation(lightingShader.Program, "dirLight.specular"),0.3f, 0.3f, 0.3f);
-
-
-		// Point light 1
-	    glm::vec3 lightColor;
-		lightColor.x= abs(sin(glfwGetTime() *Light1.x));
-		lightColor.y= abs(sin(glfwGetTime() *Light1.y));
-		lightColor.z= sin(glfwGetTime() *Light1.z);
-
-		
-		glUniform3f(glGetUniformLocation(lightingShader.Program, "pointLights[0].position"), pointLightPositions[0].x, pointLightPositions[0].y, pointLightPositions[0].z);
-		glUniform3f(glGetUniformLocation(lightingShader.Program, "pointLights[0].ambient"), lightColor.x,lightColor.y, lightColor.z);
-		glUniform3f(glGetUniformLocation(lightingShader.Program, "pointLights[0].diffuse"), lightColor.x,lightColor.y,lightColor.z);
-		glUniform3f(glGetUniformLocation(lightingShader.Program, "pointLights[0].specular"), 1.0f, 0.2f, 0.2f);
-		glUniform1f(glGetUniformLocation(lightingShader.Program, "pointLights[0].constant"), 1.0f);
-		glUniform1f(glGetUniformLocation(lightingShader.Program, "pointLights[0].linear"), 0.045f);
-		glUniform1f(glGetUniformLocation(lightingShader.Program, "pointLights[0].quadratic"),0.075f);
-
-
-
-		// Point light 2
-		glUniform3f(glGetUniformLocation(lightingShader.Program, "pointLights[1].position"), pointLightPositions[1].x, pointLightPositions[1].y, pointLightPositions[1].z);
-		glUniform3f(glGetUniformLocation(lightingShader.Program, "pointLights[1].ambient"), 0.05f, 0.05f, 0.05f);
-		glUniform3f(glGetUniformLocation(lightingShader.Program, "pointLights[1].diffuse"), 0.0f, 0.0f, 0.0f);
-		glUniform3f(glGetUniformLocation(lightingShader.Program, "pointLights[1].specular"), 0.0f, 0.0f, 0.0f);
-		glUniform1f(glGetUniformLocation(lightingShader.Program, "pointLights[1].constant"), 1.0f);
-		glUniform1f(glGetUniformLocation(lightingShader.Program, "pointLights[1].linear"), 0.0f);
-		glUniform1f(glGetUniformLocation(lightingShader.Program, "pointLights[1].quadratic"), 0.0f);
-
-		// Point light 3
-		glUniform3f(glGetUniformLocation(lightingShader.Program, "pointLights[2].position"), pointLightPositions[2].x, pointLightPositions[2].y, pointLightPositions[2].z);
-		glUniform3f(glGetUniformLocation(lightingShader.Program, "pointLights[2].ambient"), 0.0f, 0.0f, 0.0f);
-		glUniform3f(glGetUniformLocation(lightingShader.Program, "pointLights[2].diffuse"), 0.0f, 0.0f, 0.0f);
-		glUniform3f(glGetUniformLocation(lightingShader.Program, "pointLights[2].specular"), 0.0f, 0.0f, 0.0f);
-		glUniform1f(glGetUniformLocation(lightingShader.Program, "pointLights[2].constant"), 1.0f);
-		glUniform1f(glGetUniformLocation(lightingShader.Program, "pointLights[2].linear"), 0.0f);
-		glUniform1f(glGetUniformLocation(lightingShader.Program, "pointLights[2].quadratic"), 0.0f);
-
-		// Point light 4
-		glUniform3f(glGetUniformLocation(lightingShader.Program, "pointLights[3].position"), pointLightPositions[3].x, pointLightPositions[3].y, pointLightPositions[3].z);
-		glUniform3f(glGetUniformLocation(lightingShader.Program, "pointLights[3].ambient"), 0.0f, 0.0f, 0.0f);
-		glUniform3f(glGetUniformLocation(lightingShader.Program, "pointLights[3].diffuse"), 0.0f, 0.0f, 0.0f);
-		glUniform3f(glGetUniformLocation(lightingShader.Program, "pointLights[3].specular"), 0.0f, 0.0f, 0.0f);
-		glUniform1f(glGetUniformLocation(lightingShader.Program, "pointLights[3].constant"), 1.0f);
-		glUniform1f(glGetUniformLocation(lightingShader.Program, "pointLights[3].linear"), 0.0f);
-		glUniform1f(glGetUniformLocation(lightingShader.Program, "pointLights[3].quadratic"), 0.0f);
-
-		// SpotLight
-		glUniform3f(glGetUniformLocation(lightingShader.Program, "spotLight.position"), camera.GetPosition().x, camera.GetPosition().y, camera.GetPosition().z);
-		glUniform3f(glGetUniformLocation(lightingShader.Program, "spotLight.direction"), camera.GetFront().x, camera.GetFront().y, camera.GetFront().z);
-		glUniform3f(glGetUniformLocation(lightingShader.Program, "spotLight.ambient"), 0.2f, 0.2f, 0.8f);
-		glUniform3f(glGetUniformLocation(lightingShader.Program, "spotLight.diffuse"), 0.2f, 0.2f, 0.6f);
-		glUniform3f(glGetUniformLocation(lightingShader.Program, "spotLight.specular"),0.0f, 0.0f, 0.0f);
-		glUniform1f(glGetUniformLocation(lightingShader.Program, "spotLight.constant"), 1.0f);
-		glUniform1f(glGetUniformLocation(lightingShader.Program, "spotLight.linear"), 0.3f);
-		glUniform1f(glGetUniformLocation(lightingShader.Program, "spotLight.quadratic"), 0.7f);
-		glUniform1f(glGetUniformLocation(lightingShader.Program, "spotLight.cutOff"), glm::cos(glm::radians(12.0f)));
-		glUniform1f(glGetUniformLocation(lightingShader.Program, "spotLight.outerCutOff"), glm::cos(glm::radians(18.0f)));
-
-		// Set material properties
-		glUniform1f(glGetUniformLocation(lightingShader.Program, "material.shininess"), 5.0f);
-
-		// Create camera transformations
-		glm::mat4 view;
-		view = camera.GetViewMatrix();
-
-		// Get the uniform locations
-		GLint modelLoc = glGetUniformLocation(lightingShader.Program, "model");
-		GLint viewLoc = glGetUniformLocation(lightingShader.Program, "view");
-		GLint projLoc = glGetUniformLocation(lightingShader.Program, "projection");
-
-		// Pass the matrices to the shader
-		glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
-		glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));
-
-
-		glm::mat4 model(1);
-
-	
-
-		//Carga de modelo 
-        view = camera.GetViewMatrix();	
-		model = glm::mat4(1);
-		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-		Piso.Draw(lightingShader);
-
-
-	
-		model = glm::mat4(1);
-		glEnable(GL_BLEND);//Avtiva la funcionalidad para trabajar el canal alfa
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-		glUniform1i(glGetUniformLocation(lightingShader.Program, "transparency"), 1);
-	    Dog.Draw(lightingShader);
-		glDisable(GL_BLEND);  //Desactiva el canal alfa 
-		glBindVertexArray(0);
-	
-
-		// Also draw the lamp object, again binding the appropriate shader
-		lampShader.Use();
-		// Get location objects for the matrices on the lamp shader (these could be different on a different shader)
-		modelLoc = glGetUniformLocation(lampShader.Program, "model");
-		viewLoc = glGetUniformLocation(lampShader.Program, "view");
-		projLoc = glGetUniformLocation(lampShader.Program, "projection");
-
-		// Set matrices
-		glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
-		glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));
-		model = glm::mat4(1);
-		model = glm::translate(model, lightPos);
-		model = glm::scale(model, glm::vec3(0.2f)); // Make it a smaller cube
-		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-		// Draw the light object (using light's vertex attributes)
-		for (GLuint i = 0; i < 4; i++)
-		{
-			model = glm::mat4(1);
-			model = glm::translate(model, pointLightPositions[i]);
-			model = glm::scale(model, glm::vec3(0.2f)); // Make it a smaller cube
-			glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-			glBindVertexArray(VAO);
-			glDrawArrays(GL_TRIANGLES, 0, 36);
-		}
-		glBindVertexArray(0);
-
-
-
-		// Swap the screen buffers
-		glfwSwapBuffers(window);
-	}
-
-
-	// Terminate GLFW, clearing any resources allocated by GLFW.
-	glfwTerminate();
-
-
-
-	return 0;
+// =====================
+//  BLENDER -> OPENGL
+// =====================
+// Conversión de posiciones/direcciones Blender(Z-up) -> OpenGL(Y-up): (x,y,z) -> (x,z,-y)
+static inline glm::vec3 FromBlender(const glm::vec3& b) {
+    return glm::vec3(b.x, b.z, -b.y);
 }
 
-// Moves/alters the camera positions based on user input
-void DoMovement()
-{
+struct BLPoint { glm::vec3 pos; float energy; };
+static const BLPoint kBlenderPoints[] = {
+    { {  0.0f, -3.8673f, 1.8027f }, 1000.0f },
+    { {  0.0f,  1.4359f, 1.3330f }, 1000.0f }, 
+};
 
-	// Camera controls
-	if (keys[GLFW_KEY_W] || keys[GLFW_KEY_UP])
-	{
-		camera.ProcessKeyboard(FORWARD, deltaTime);
-
-	}
-
-	if (keys[GLFW_KEY_S] || keys[GLFW_KEY_DOWN])
-	{
-		camera.ProcessKeyboard(BACKWARD, deltaTime);
+struct BLDir { glm::vec3 dir; float intensity; };
+static const BLDir kBlenderDirs[] = {
+    { { -0.2f, -1.0f, -0.3f }, 1.0f },
+    { {  0.4f, -0.7f,  0.2f }, 0.6f }  
+};
 
 
-	}
+struct BLSpot { glm::vec3 pos; glm::vec3 dir; float innerDeg, outerDeg; float intensity; glm::vec3 color; };
+static const BLSpot kBlenderSpots[] = {
 
-	if (keys[GLFW_KEY_A] || keys[GLFW_KEY_LEFT])
-	{
-		camera.ProcessKeyboard(LEFT, deltaTime);
+    { { -5.5106f, 0.59733f, 6.7701f },      // pos
+      {  0.31275f, 0.00000f, -0.94984f },   // dir 
+      12.5f, 17.5f,                         // inner / outer (grados)
+      2.0f,                                 // intensidad
+      { 1.0f, 1.0f, 1.0f } },               // color (blanco)
 
+      { {  1.8585f, -4.0835f, 0.45771f },       // pos
+        {  0.772468f, -0.083688f, -0.629515f }, // dir 
+        12.5f, 17.5f,
+        1.5f,
+        { 1.0f, 1.0f, 1.0f } },                 // blanco
 
-	}
+        // === SPOT 3 (nuevo, rojo) ===
+        { {  1.1009f, -3.4955f, 0.45771f },     // pos 
+          { -0.66079f, 0.05403f, -0.74908f },   // dir 
+          12.5f, 17.5f,
+          2.0f,
+          { 1.0f, 0.0f, 0.0f } }                // ROJO
+};
 
-	if (keys[GLFW_KEY_D] || keys[GLFW_KEY_RIGHT])
-	{
-		camera.ProcessKeyboard(RIGHT, deltaTime);
+// ======== Cantidades ========
+static const int NUM_POINT_LIGHTS =
+(int)(sizeof(kBlenderPoints) / sizeof(kBlenderPoints[0]));
+static const int NUM_DIR_LIGHTS =
+(int)(sizeof(kBlenderDirs) / sizeof(kBlenderDirs[0]));
+static const int NUM_SPOT_LIGHTS =
+(int)(sizeof(kBlenderSpots) / sizeof(kBlenderSpots[0]));
 
+// ======== Buffers ya convertidos a coordenadas OpenGL ========
+glm::vec3 gPointPos[NUM_POINT_LIGHTS];
+float     gPointEnergy[NUM_POINT_LIGHTS];
 
-	}
+glm::vec3 gDirDir[NUM_DIR_LIGHTS];
+float     gDirIntensity[NUM_DIR_LIGHTS];
 
-	if (keys[GLFW_KEY_T])
-	{
-		pointLightPositions[0].x += 0.01f;
-	}
-	if (keys[GLFW_KEY_G])
-	{
-		pointLightPositions[0].x -= 0.01f;
-	}
+glm::vec3 gSpotPos[NUM_SPOT_LIGHTS];
+glm::vec3 gSpotDir[NUM_SPOT_LIGHTS];
+float     gSpotInnerCos[NUM_SPOT_LIGHTS];
+float     gSpotOuterCos[NUM_SPOT_LIGHTS];
+float     gSpotIntensity[NUM_SPOT_LIGHTS];
+glm::vec3 gSpotColor[NUM_SPOT_LIGHTS];   // <<<< NECESARIO para color por luz
 
-	if (keys[GLFW_KEY_Y])
-	{
-		pointLightPositions[0].y += 0.01f;
-	}
-
-	if (keys[GLFW_KEY_H])
-	{
-		pointLightPositions[0].y -= 0.01f;
-	}
-	if (keys[GLFW_KEY_U])
-	{
-		pointLightPositions[0].z -= 0.1f;
-	}
-	if (keys[GLFW_KEY_J])
-	{
-		pointLightPositions[0].z += 0.01f;
-	}
-	
+// ======== Inicialización de conversiones ========
+static void InitConvertedLights() {
+    for (int i = 0; i < NUM_POINT_LIGHTS; ++i) {
+        gPointPos[i] = FromBlender(kBlenderPoints[i].pos);
+        gPointEnergy[i] = kBlenderPoints[i].energy;
+    }
+    for (int i = 0; i < NUM_DIR_LIGHTS; ++i) {
+        gDirDir[i] = glm::normalize(FromBlender(kBlenderDirs[i].dir));
+        gDirIntensity[i] = kBlenderDirs[i].intensity;
+    }
+    for (int i = 0; i < NUM_SPOT_LIGHTS; ++i) {
+        gSpotPos[i] = FromBlender(kBlenderSpots[i].pos);
+        gSpotDir[i] = glm::normalize(FromBlender(kBlenderSpots[i].dir));
+        gSpotInnerCos[i] = glm::cos(glm::radians(kBlenderSpots[i].innerDeg));
+        gSpotOuterCos[i] = glm::cos(glm::radians(kBlenderSpots[i].outerDeg));
+        gSpotIntensity[i] = kBlenderSpots[i].intensity;
+        gSpotColor[i] = kBlenderSpots[i].color; // <<<< cargar color
+    }
 }
 
-// Is called whenever a key is pressed/released via GLFW
-void KeyCallback(GLFWwindow *window, int key, int scancode, int action, int mode)
-{
-	if (GLFW_KEY_ESCAPE == key && GLFW_PRESS == action)
-	{
-		glfwSetWindowShouldClose(window, GL_TRUE);
-	}
+int main() {
+    // Init GLFW
+    if (!glfwInit()) { std::cout << "Failed to init GLFW\n"; return EXIT_FAILURE; }
 
-	if (key >= 0 && key < 1024)
-	{
-		if (action == GLFW_PRESS)
-		{
-			keys[key] = true;
-		}
-		else if (action == GLFW_RELEASE)
-		{
-			keys[key] = false;
-		}
-	}
+    // Create window
+    GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "Practica 9.Ronie Celis", nullptr, nullptr);
+    if (!window) { std::cout << "Failed to create GLFW window\n"; glfwTerminate(); return EXIT_FAILURE; }
 
-	if (keys[GLFW_KEY_SPACE])
-	{
-		active = !active;
-		if (active)
-		{
-			Light1 = glm::vec3(1.0f, 1.0f, 0.0f);
-		}
-		else
-		{
-			Light1 = glm::vec3(0);//Cuado es solo un valor en los 3 vectores pueden dejar solo una componente
-		}
-	}
+    glfwMakeContextCurrent(window);
+    glfwGetFramebufferSize(window, &SCREEN_WIDTH, &SCREEN_HEIGHT);
+
+    // Callbacks
+    glfwSetKeyCallback(window, KeyCallback);
+    glfwSetCursorPosCallback(window, MouseCallback);
+
+    glewExperimental = GL_TRUE;
+    if (GLEW_OK != glewInit()) { std::cout << "Failed to initialize GLEW\n"; return EXIT_FAILURE; }
+
+    // Viewport y opciones GL
+    glViewport(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+    glEnable(GL_DEPTH_TEST);
+    // === INFO DEL CONTEXTO OPENGL ===
+    {
+        auto safe_cstr = [](const GLubyte* s) -> const char* {
+            return s ? reinterpret_cast<const char*>(s) : "(null)";
+            };
+        auto print_gl_str = [&](GLenum pname, const char* label) {
+            const GLubyte* s = glGetString(pname);
+            std::cout << label << safe_cstr(s) << '\n';
+            };
+        print_gl_str(GL_VERSION, "> Version: ");
+        print_gl_str(GL_VENDOR, "> Vendor: ");
+        print_gl_str(GL_RENDERER, "> Renderer: ");
+        print_gl_str(GL_SHADING_LANGUAGE_VERSION, "> SL Version: ");
+    }
+
+    // Shaders
+    Shader lightingShader("Shader/lighting.vs", "Shader/lighting.frag");
+
+    // Modelos
+    Model Dog((char*)"Models/EscenarioLuces.obj");
+
+    // Conversión de luces
+    InitConvertedLights();
+
+    // Proyección
+    glm::mat4 projection = glm::perspective(
+        camera.GetZoom(),
+        (GLfloat)SCREEN_WIDTH / (GLfloat)SCREEN_HEIGHT,
+        0.5f,   // mejor precisión que 0.1
+        600.0f
+    );
+
+    // Bucle principal
+    while (!glfwWindowShouldClose(window)) {
+        // Tiempo
+        GLfloat currentFrame = (GLfloat)glfwGetTime();
+        deltaTime = currentFrame - lastFrame; lastFrame = currentFrame;
+
+        // Input
+        glfwPollEvents();
+        DoMovement();
+
+        // Clear
+        glClearColor(0.12f, 0.12f, 0.13f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        // === Luces y material ===
+        lightingShader.Use();
+
+        // Material (coincide con lighting.frag: "material")
+        glUniform1i(glGetUniformLocation(lightingShader.Program, "material.diffuse"), 0);
+        glUniform1i(glGetUniformLocation(lightingShader.Program, "material.specular"), 1);
+        glUniform1f(glGetUniformLocation(lightingShader.Program, "material.shininess"), 16.0f);
+
+        // Cámara
+        glm::mat4 view = camera.GetViewMatrix();
+        glUniform3f(glGetUniformLocation(lightingShader.Program, "viewPos"),
+            camera.GetPosition().x, camera.GetPosition().y, camera.GetPosition().z);
+
+        // ===== Direccionales (arreglo) =====
+        for (int i = 0; i < NUM_DIR_LIGHTS; ++i) {
+            char name[64];
+            // Escala de intensidades base (en blanco; si quieres color direccional, añade color al BLDir)
+            const float ambB = 0.06f * g_GlobalLightBoost * gDirIntensity[i];
+            const float difB = 0.12f * g_GlobalLightBoost * gDirIntensity[i];
+            const float speB = 0.22f * g_GlobalLightBoost * gDirIntensity[i];
+
+            std::snprintf(name, sizeof(name), "dirLights[%d].direction", i);
+            glUniform3f(glGetUniformLocation(lightingShader.Program, name),
+                gDirDir[i].x, gDirDir[i].y, gDirDir[i].z);
+
+            std::snprintf(name, sizeof(name), "dirLights[%d].ambient", i);
+            glUniform3f(glGetUniformLocation(lightingShader.Program, name), ambB, ambB, ambB);
+
+            std::snprintf(name, sizeof(name), "dirLights[%d].diffuse", i);
+            glUniform3f(glGetUniformLocation(lightingShader.Program, name), difB, difB, difB);
+
+            std::snprintf(name, sizeof(name), "dirLights[%d].specular", i);
+            glUniform3f(glGetUniformLocation(lightingShader.Program, name), speB, speB, speB);
+        }
+
+        // ===== Puntuales (arreglo) =====
+        for (int i = 0; i < NUM_POINT_LIGHTS; ++i) {
+            char name[64];
+
+            // Energía Blender ? factor
+            const float eBoost = gPointEnergy[i] / 1000.0f;
+
+            glm::vec3 amb = glm::vec3(0.04f) * (0.7f * eBoost) * g_GlobalLightBoost;
+            glm::vec3 dif = glm::vec3(0.90f) * eBoost * g_GlobalLightBoost;
+            glm::vec3 spe = glm::vec3(0.55f) * eBoost * g_GlobalLightBoost;
+
+            // Atenuación base
+            float kc = 1.0f, kl = 0.045f, kq = 0.0075f;
+            if (eBoost > 1.5f) { kl = 0.028f; kq = 0.0019f; } // menos atenuación si es potente
+
+            // Heurística opcional por profundidad (como en tu Previo)
+            if (gPointPos[i].z < 5.0f) { dif *= 0.7f; spe *= 0.5f; kl = 0.060f; kq = 0.0170f; }
+            else if (gPointPos[i].z < 15.0f) { dif *= 0.90f; }
+
+            std::snprintf(name, sizeof(name), "pointLights[%d].position", i);
+            glUniform3f(glGetUniformLocation(lightingShader.Program, name),
+                gPointPos[i].x, gPointPos[i].y, gPointPos[i].z);
+
+            std::snprintf(name, sizeof(name), "pointLights[%d].constant", i);
+            glUniform1f(glGetUniformLocation(lightingShader.Program, name), kc);
+
+            std::snprintf(name, sizeof(name), "pointLights[%d].linear", i);
+            glUniform1f(glGetUniformLocation(lightingShader.Program, name), kl);
+
+            std::snprintf(name, sizeof(name), "pointLights[%d].quadratic", i);
+            glUniform1f(glGetUniformLocation(lightingShader.Program, name), kq);
+
+            std::snprintf(name, sizeof(name), "pointLights[%d].ambient", i);
+            glUniform3f(glGetUniformLocation(lightingShader.Program, name), amb.x, amb.y, amb.z);
+
+            std::snprintf(name, sizeof(name), "pointLights[%d].diffuse", i);
+            glUniform3f(glGetUniformLocation(lightingShader.Program, name), dif.x, dif.y, dif.z);
+
+            std::snprintf(name, sizeof(name), "pointLights[%d].specular", i);
+            glUniform3f(glGetUniformLocation(lightingShader.Program, name), spe.x, spe.y, spe.z);
+        }
+
+        // ===== Spotlights (arreglo) =====
+        for (int i = 0; i < NUM_SPOT_LIGHTS; ++i) {
+            char name[64];
+
+            // >>> AQUÍ ESTÁ EL COLOR POR LUZ <<<
+            // Ganancias base: sube diffuse para que el color “pinte” más.
+            glm::vec3 amb = 0.02f * gSpotIntensity[i] * g_GlobalLightBoost * gSpotColor[i];
+            glm::vec3 dif = 1.40f * gSpotIntensity[i] * g_GlobalLightBoost * gSpotColor[i];
+            glm::vec3 spe = 0.60f * gSpotIntensity[i] * g_GlobalLightBoost * gSpotColor[i];
+
+            const float kc = 1.0f, kl = 0.045f, kq = 0.0075f;
+
+            std::snprintf(name, sizeof(name), "spotLights[%d].position", i);
+            glUniform3f(glGetUniformLocation(lightingShader.Program, name),
+                gSpotPos[i].x, gSpotPos[i].y, gSpotPos[i].z);
+
+            std::snprintf(name, sizeof(name), "spotLights[%d].direction", i);
+            glUniform3f(glGetUniformLocation(lightingShader.Program, name),
+                gSpotDir[i].x, gSpotDir[i].y, gSpotDir[i].z);
+
+            std::snprintf(name, sizeof(name), "spotLights[%d].cutOff", i);
+            glUniform1f(glGetUniformLocation(lightingShader.Program, name), gSpotInnerCos[i]);
+
+            std::snprintf(name, sizeof(name), "spotLights[%d].outerCutOff", i);
+            glUniform1f(glGetUniformLocation(lightingShader.Program, name), gSpotOuterCos[i]);
+
+            std::snprintf(name, sizeof(name), "spotLights[%d].constant", i);
+            glUniform1f(glGetUniformLocation(lightingShader.Program, name), kc);
+
+            std::snprintf(name, sizeof(name), "spotLights[%d].linear", i);
+            glUniform1f(glGetUniformLocation(lightingShader.Program, name), kl);
+
+            std::snprintf(name, sizeof(name), "spotLights[%d].quadratic", i);
+            glUniform1f(glGetUniformLocation(lightingShader.Program, name), kq);
+
+            std::snprintf(name, sizeof(name), "spotLights[%d].ambient", i);
+            glUniform3f(glGetUniformLocation(lightingShader.Program, name), amb.x, amb.y, amb.z);
+
+            std::snprintf(name, sizeof(name), "spotLights[%d].diffuse", i);
+            glUniform3f(glGetUniformLocation(lightingShader.Program, name), dif.x, dif.y, dif.z);
+
+            std::snprintf(name, sizeof(name), "spotLights[%d].specular", i);
+            glUniform3f(glGetUniformLocation(lightingShader.Program, name), spe.x, spe.y, spe.z);
+        }
+
+        // ===== Matrices y draw =====
+        GLint modelLoc = glGetUniformLocation(lightingShader.Program, "model");
+        GLint viewLoc = glGetUniformLocation(lightingShader.Program, "view");
+        GLint projLoc = glGetUniformLocation(lightingShader.Program, "projection");
+
+        glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
+        glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));
+
+        glm::mat4 model(1.0f);
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glUniform1i(glGetUniformLocation(lightingShader.Program, "transparency"), 0);
+        Dog.Draw(lightingShader);
+
+        // Swap
+        glfwSwapBuffers(window);
+    }
+
+    // Cleanup
+    glfwTerminate();
+    return 0;
 }
 
-void MouseCallback(GLFWwindow *window, double xPos, double yPos)
-{
-	if (firstMouse)
-	{
-		lastX = xPos;
-		lastY = yPos;
-		firstMouse = false;
-	}
+// --- Movimiento cámara y edición en vivo de UNA puntual (índice 0) ---
+void DoMovement() {
+    if (keys[GLFW_KEY_W] || keys[GLFW_KEY_UP])    camera.ProcessKeyboard(FORWARD, deltaTime);
+    if (keys[GLFW_KEY_S] || keys[GLFW_KEY_DOWN])  camera.ProcessKeyboard(BACKWARD, deltaTime);
+    if (keys[GLFW_KEY_A] || keys[GLFW_KEY_LEFT])  camera.ProcessKeyboard(LEFT, deltaTime);
+    if (keys[GLFW_KEY_D] || keys[GLFW_KEY_RIGHT]) camera.ProcessKeyboard(RIGHT, deltaTime);
 
-	GLfloat xOffset = xPos - lastX;
-	GLfloat yOffset = lastY - yPos;  // Reversed since y-coordinates go from bottom to left
+    // Mover la point[0] a mano (opcional)
+    if (NUM_POINT_LIGHTS > 0) {
+        if (keys[GLFW_KEY_T]) gPointPos[0].x += 0.01f;
+        if (keys[GLFW_KEY_G]) gPointPos[0].x -= 0.01f;
+        if (keys[GLFW_KEY_Y]) gPointPos[0].y += 0.01f;
+        if (keys[GLFW_KEY_H]) gPointPos[0].y -= 0.01f;
+        if (keys[GLFW_KEY_U]) gPointPos[0].z -= 0.10f;
+        if (keys[GLFW_KEY_J]) gPointPos[0].z += 0.01f;
+    }
+}
 
-	lastX = xPos;
-	lastY = yPos;
+// --- Input ---
+void KeyCallback(GLFWwindow* window, int key, int, int action, int) {
+    if (GLFW_KEY_ESCAPE == key && GLFW_PRESS == action) glfwSetWindowShouldClose(window, GL_TRUE);
+    if (key >= 0 && key < 1024) {
+        if (action == GLFW_PRESS) keys[key] = true;
+        else if (action == GLFW_RELEASE) keys[key] = false;
+    }
+}
 
-	camera.ProcessMouseMovement(xOffset, yOffset);
+void MouseCallback(GLFWwindow* window, double xPos, double yPos) {
+    if (firstMouse) { lastX = (GLfloat)xPos; lastY = (GLfloat)yPos; firstMouse = false; }
+    GLfloat xOffset = (GLfloat)xPos - lastX;
+    GLfloat yOffset = lastY - (GLfloat)yPos;
+    lastX = (GLfloat)xPos; lastY = (GLfloat)yPos;
+    camera.ProcessMouseMovement(xOffset, yOffset);
 }

@@ -1,7 +1,7 @@
 
 
 //Previo 8
-//Celis Hernández Ronie
+//Celis Hern?ndez Ronie
 //30 de septiembre del 2025
 //318143093
 
@@ -101,7 +101,7 @@ int main()
         return EXIT_FAILURE;
     }
 
-    // === INFO DEL CONTEXTO OPENGL (pegar después de glewInit OK) ===
+    // === INFO DEL CONTEXTO OPENGL (pegar despu?s de glewInit OK) ===
     {
         auto safe_cstr = [](const GLubyte* s) -> const char* {
             return s ? reinterpret_cast<const char*>(s) : "(null)";
@@ -240,7 +240,7 @@ int main()
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        
+
         lightingShader.Use();
         GLint lightPosLoc = glGetUniformLocation(lightingShader.Program, "light.position");
         GLint viewPosLoc = glGetUniformLocation(lightingShader.Program, "viewPos");
@@ -249,13 +249,13 @@ int main()
 
 
         // Set lights properties
-        glUniform3f(glGetUniformLocation(lightingShader.Program, "light.ambient"),0.3f, 0.3f, 0.3f);
+        glUniform3f(glGetUniformLocation(lightingShader.Program, "light.ambient"), 0.3f, 0.3f, 0.3f);
         glUniform3f(glGetUniformLocation(lightingShader.Program, "light.diffuse"), 0.3f, 0.3f, 0.3f);
         glUniform3f(glGetUniformLocation(lightingShader.Program, "light.specular"), 0.0f, 0.0f, 0.0f);
 
 
         // --- LUZ 2 ---
-        glUniform3f(glGetUniformLocation(lightingShader.Program, "light2.position"),lightPos2.x, lightPos2.y, lightPos2.z);
+        glUniform3f(glGetUniformLocation(lightingShader.Program, "light2.position"), lightPos2.x, lightPos2.y, lightPos2.z);
         glUniform3f(glGetUniformLocation(lightingShader.Program, "light2.ambient"), 0.0f, 0.0f, 0.2f);
         glUniform3f(glGetUniformLocation(lightingShader.Program, "light2.diffuse"), 0.0f, 0.0f, 1.0f);
         glUniform3f(glGetUniformLocation(lightingShader.Program, "light2.specular"), 0.0f, 0.0f, 1.0f);
@@ -280,7 +280,7 @@ int main()
         model = glm::scale(model, glm::vec3(3.0f, 3.0f, 3.0f));
         glUniformMatrix4fv(glGetUniformLocation(lightingShader.Program, "model"), 1, GL_FALSE, glm::value_ptr(model));
         glBindVertexArray(VAO);
-       
+
         red_dog.Draw(lightingShader);
 
 
@@ -292,7 +292,7 @@ int main()
         glUniformMatrix4fv(glGetUniformLocation(lightingShader.Program, "model"), 1, GL_FALSE, glm::value_ptr(model2));
         molino.Draw(lightingShader);
         //glDrawArrays(GL_TRIANGLES, 0, 36);
-        
+
 
         glBindVertexArray(0);
 
@@ -310,10 +310,10 @@ int main()
         glUniformMatrix4fv(glGetUniformLocation(lampshader.Program, "model"), 1, GL_FALSE, glm::value_ptr(lampModel));
         glUniform3f(glGetUniformLocation(lampshader.Program, "lampColor"), 1.0f, 1.0f, 1.0f); // blanco
         glDrawArrays(GL_TRIANGLES, 0, 36);
-      
 
 
-        // Lámpara 2 (NUEVA)
+
+        // L?mpara 2 (NUEVA)
         glm::mat4 lampModel2 = glm::mat4(1.0f);
         lampModel2 = glm::translate(lampModel2, lightPos2);
         lampModel2 = glm::scale(lampModel2, glm::vec3(0.3f));
@@ -388,13 +388,13 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mode
 
     if (keys[GLFW_KEY_O])
     {
-       
+
         movelightPos += 0.1f;
     }
 
     if (keys[GLFW_KEY_L])
     {
-        
+
         movelightPos -= 0.1f;
     }
 
@@ -405,7 +405,7 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mode
 
     if (keys[GLFW_KEY_K])
     {
-        lightPos2.y -= 0.1f; 
+        lightPos2.y -= 0.1f;
     }
 
 
@@ -428,5 +428,4 @@ void MouseCallback(GLFWwindow* window, double xPos, double yPos)
 
     camera.ProcessMouseMovement(xOffset, yOffset);
 }
-
 

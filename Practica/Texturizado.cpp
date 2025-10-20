@@ -120,19 +120,53 @@ int main()
 	Shader lampShader("Shader/lamp.vs", "Shader/lamp.frag");
 
 	// Set up vertex data (and buffer(s)) and attribute pointers
-	GLfloat vertices[] =
-	{
-		// Positions            // Colors              // Texture Coords
-		-0.5f, -0.5f, 0.0f,    1.0f, 1.0f,1.0f,		0.0f,0.0f,
-		0.5f, -0.5f, 0.0f,	   1.0f, 1.0f,1.0f,		1.0f,0.0f,
-		0.5f,  0.5f, 0.0f,     1.0f, 1.0f,1.0f,	    1.0f,1.0f,
-		-0.5f,  0.5f, 0.0f,    1.0f, 1.0f,1.0f,		0.0f,1.0f,
+	GLfloat vertices[] = {
+		// cara 1  (tope: Y = +1)  (f 1/1/1 5/2/1 7/3/1 3/4/1)
+		 1.0f,  1.0f, -1.0f,  1,1,1,   0.499217f,0.626171f, // v1 vt1
+		-1.0f,  1.0f, -1.0f,  1,1,1,   0.499990f,0.876000f, // v5 vt2
+		-1.0f,  1.0f,  1.0f,  1,1,1,   0.313470f,0.876030f, // v7 vt3
+		 1.0f,  1.0f,  1.0f,  1,1,1,   0.312697f,0.626202f, // v3 vt4
+
+
+		 // cara 2  (f 4/5/2 3/4/2 7/6/2 8/7/2)
+		  1.0f, -1.0f,  1.0f,  1,1,1,   0.311924f,0.376373f, // v4 vt5
+		  1.0f,  1.0f,  1.0f,  1,1,1,   0.312697f,0.626202f, // v3 vt4
+		 -1.0f,  1.0f,  1.0f,  1,1,1,   0.133118f,0.626318f, // v7 vt6
+		 -1.0f, -1.0f,  1.0f,  1,1,1,   0.132345f,0.376489f, // v8 vt7
+
+		 // cara 3  (f 8/8/3 7/9/3 5/10/3 6/11/3)
+		 -1.0f, -1.0f,  1.0f,  1,1,1,   0.878424f,0.376368f, // v8 vt8
+		 -1.0f,  1.0f,  1.0f,  1,1,1,   0.879197f,0.626197f, // v7 vt9
+		 -1.0f,  1.0f, -1.0f,  1,1,1,   0.692678f,0.626227f, // v5 vt10
+		 -1.0f, -1.0f, -1.0f,  1,1,1,   0.691904f,0.376399f, // v6 vt11
+
+		 // cara 4  (f 6/12/4 2/13/4 4/5/4 8/14/4)
+		 -1.0f, -1.0f, -1.0f,  1,1,1,   0.497670f,0.126515f, // v6 vt12
+		  1.0f, -1.0f, -1.0f,  1,1,1,   0.498444f,0.376343f, // v2 vt13
+		  1.0f, -1.0f,  1.0f,  1,1,1,   0.311924f,0.376373f, // v4 vt5
+		 -1.0f, -1.0f,  1.0f,  1,1,1,   0.311150f,0.126545f, // v8 vt14
+
+		 // cara 5  (f 2/13/5 1/1/5 3/4/5 4/5/5)
+		  1.0f, -1.0f, -1.0f,  1,1,1,   0.498444f,0.376343f, // v2 vt13
+		  1.0f,  1.0f, -1.0f,  1,1,1,   0.499217f,0.626171f, // v1 vt1
+		  1.0f,  1.0f,  1.0f,  1,1,1,   0.312697f,0.626202f, // v3 vt4
+		  1.0f, -1.0f,  1.0f,  1,1,1,   0.311924f,0.376373f, // v4 vt5
+
+		  // cara 6  (f 6/11/6 5/10/6 1/1/6 2/13/6)
+		  -1.0f, -1.0f, -1.0f,  1,1,1,   0.691904f,0.376399f, // v6 vt11
+		  -1.0f,  1.0f, -1.0f,  1,1,1,   0.692678f,0.626227f, // v5 vt10
+		   1.0f,  1.0f, -1.0f,  1,1,1,   0.499217f,0.626171f, // v1 vt1
+		   1.0f, -1.0f, -1.0f,  1,1,1,   0.498444f,0.376343f, // v2 vt13
 	};
 
-	GLuint indices[] =
-	{
-		0,1,3,
-		1,2,3
+
+	GLuint indices[] = {
+		0,1,2,  0,2,3,        // cara 1
+		4,5,6,  4,6,7,        // cara 2
+		8,9,10, 8,10,11,      // cara 3
+		12,13,14, 12,14,15,   // cara 4
+		16,17,18, 16,18,19,   // cara 5
+		20,21,22, 20,22,23    // cara 6
 	};
 
 	// First, set the container's VAO (and VBO)
@@ -171,7 +205,7 @@ int main()
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST_MIPMAP_NEAREST);
 	// Diffuse map
-	image = stbi_load("images/madera.png", &textureWidth, &textureHeight, &nrChannels, 0);
+	image = stbi_load("images/cubo.jpeg", &textureWidth, &textureHeight, &nrChannels, 0);
 	glBindTexture(GL_TEXTURE_2D, texture1);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, textureWidth, textureHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
 	glGenerateMipmap(GL_TEXTURE_2D);
