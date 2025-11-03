@@ -1,8 +1,7 @@
-//Ronie Celis Hern·ndez
+//Ronie Celis Hern√°ndez
 //318143093
 //27 de Octubre del 2025
 //Previo 11
-
 
 #include <iostream>
 #include <cmath>
@@ -59,7 +58,7 @@ glm::vec3 pointLightPositions[] = {
 };
 
 float vertices[] = {
-	// ... (VÈrtices sin cambios)
+	// ... (V√©rtices sin cambios)
 	-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
 	   0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
 	   0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
@@ -121,7 +120,7 @@ float dogRot = 0.0f;
 bool step = false;
 
 // NUEVO: Variables para controlar la caminata del perro
-float distanciaTotal = 2.35f; // Distancia total que caminar· el perro (puedes cambiar este valor)
+float distanciaTotal = 2.35f; // Distancia total que caminar√° el perro (puedes cambiar este valor)
 float distanciaCubierta = 0.0f; // Distancia que ha cubierto hasta ahora
 float velocidad = 0.001f; // Velocidad de avance del perro
 
@@ -241,7 +240,7 @@ int main()
 		// Check if any events have been activiated (key pressed, mouse moved etc.) and call corresponding response functions
 		glfwPollEvents();
 		DoMovement();
-		Animation(); // MODIFICADO: Esta funciÛn ahora manejar· la lÛgica de parar
+		Animation(); // MODIFICADO: Esta funci√≥n ahora manejar√° la l√≥gica de parar
 
 		// Clear the colorbuffer
 		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
@@ -527,9 +526,9 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mode
 
 	}
 
-	// MODIFICADO: LÛgica de la tecla 'B'
+	// MODIFICADO: L√≥gica de la tecla 'B'
 	if (keys[GLFW_KEY_B]) {
-		if (dogAnim == 0) { // Iniciar caminata solo si est· en reposo (dogAnim == 0)
+		if (dogAnim == 0) { // Iniciar caminata solo si est√° en reposo (dogAnim == 0)
 			dogAnim = 1;
 			distanciaCubierta = 0.0f; // Reinicia el contador de distancia
 		}
@@ -537,7 +536,7 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mode
 
 }
 
-// MODIFICADO: LÛgica de animaciÛn del perro
+// MODIFICADO: L√≥gica de animaci√≥n del perro
 void Animation() {
 	if (AnimBall)
 	{
@@ -551,9 +550,9 @@ void Animation() {
 		//printf("%f", rotBall);
 	}
 
-	// LÛgica de la m·quina de estados del perro
+	// L√≥gica de la m√°quina de estados del perro
 	if (dogAnim == 1) { // Estado: Caminando
-		// Verifica si a˙n no hemos alcanzado la distancia objetivo
+		// Verifica si a√∫n no hemos alcanzado la distancia objetivo
 		if (distanciaCubierta < distanciaTotal) {
 
 			// Mueve las extremidades
@@ -582,9 +581,9 @@ void Animation() {
 			distanciaCubierta += velocidad;
 		}
 		else {
-			// Se alcanzÛ la distancia objetivo
+			// Se alcanz√≥ la distancia objetivo
 			dogAnim = 0; // Cambia al estado de reposo (Idle)
-			// Reinicia las extremidades a una posiciÛn neutral
+			// Reinicia las extremidades a una posici√≥n neutral
 			RLegs = 0.0f;
 			FLegs = 0.0f;
 			head = 0.0f;
